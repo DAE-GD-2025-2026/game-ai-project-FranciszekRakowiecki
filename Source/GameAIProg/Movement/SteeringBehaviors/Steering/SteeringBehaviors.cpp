@@ -72,26 +72,13 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	SteeringOutput Steering{};
 
-	const float PredictionUpdateDelay = 0.5f;
+	Agent.SetMaxLinearSpeed(500.0f);
 
-	Agent.ElapsedTime += DeltaT;
+	Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * (FVector2D::Distance(Target.Position, Agent.GetPosition()) / Agent.GetMaxLinearSpeed());
 
-	if (Agent.LastPredictionTime + PredictionUpdateDelay < Agent.ElapsedTime)
-	{
-		Agent.LastPredictionTime = Agent.ElapsedTime;
-		Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * PredictionUpdateDelay;
-	}
-	
-	const float distance = FVector2D::Distance(Agent.PredictedTargetLocation, Agent.GetPosition());
+	Steering.LinearVelocity = Agent.PredictedTargetLocation - Agent.GetPosition();
 
-	if (distance > 1000.0f)
-		return Steering;
-
-	const float randomRotation = FMath::RandRange(0.0f, 1.0f) * 3.14f * 2.0f;
-
-	FVector2D direction = FVector2D(cosf(randomRotation), sinf(randomRotation)) * 50.0f;
-
-	Steering.LinearVelocity = Agent.GetPosition() + direction - Agent.PredictedTargetLocation;
+	Steering.LinearVelocity *= -1.0f;
 	
 	return Steering;
 }
@@ -99,22 +86,12 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 SteeringOutput Pursuit::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	SteeringOutput Steering{};
-	
-	const float PredictionUpdateDelay = 1.0f;
 
-	Agent.ElapsedTime += DeltaT;
+	Agent.SetMaxLinearSpeed(300.0f);
 
-	if (Agent.LastPredictionTime + PredictionUpdateDelay < Agent.ElapsedTime)
-	{
-		Agent.LastPredictionTime = Agent.ElapsedTime;
-		Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * PredictionUpdateDelay;
-	}
+	Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * (FVector2D::Distance(Target.Position, Agent.GetPosition()) / Agent.GetMaxLinearSpeed());
 
-	const float randomRotation = FMath::RandRange(0.0f, 1.0f) * 3.14f * 2.0f;
-
-	FVector2D direction = FVector2D(cosf(randomRotation), sinf(randomRotation)) * 50.0f;
-
-	Steering.LinearVelocity = Agent.PredictedTargetLocation + direction - Agent.GetPosition();
+	Steering.LinearVelocity = Agent.PredictedTargetLocation - Agent.GetPosition();
 	
 	return Steering;
 }
