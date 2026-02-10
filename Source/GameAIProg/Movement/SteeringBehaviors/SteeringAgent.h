@@ -63,6 +63,10 @@ protected:
 	virtual void BeginDestroy() override;
 
 public:
+	float ElapsedTime = 0.0f;
+	float LastPredictionTime = -100.0f;
+	FVector2D PredictedTargetLocation = { 0.0f, 0.0f };
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
