@@ -21,13 +21,17 @@ SteeringOutput Wander::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 
 	const float randomRotation = FMath::RandRange(0.0f, 1.0f) * 3.14f * 2.0f;
 
-	FVector2D direction = FVector2D(cosf(randomRotation), sinf(randomRotation)) * 400.0f;
+	FVector2D randomDirection = FVector2D(cosf(randomRotation), sinf(randomRotation)) * 400.0f;
+	FVector2D direction = FVector2D(cosf(rotation), sinf(rotation)) * 300.0f;
 
-	Steering.LinearVelocity = Agent.GetPosition() - (direction + Agent.GetPosition() + FVector2D(cosf(rotation), sinf(rotation)) * 300.0f);
+	FVector2D circlePosition = randomDirection + Agent.GetPosition() + direction;
+
+	DrawDebugCircleArc(Agent.GetWorld(), FVector{circlePosition.X, circlePosition.Y, 0.0f }, 300.0f, FVector{}, 1.0f, 10, { 255, 0, 0} );
+
+	Steering.LinearVelocity = Agent.GetPosition() - circlePosition;
 	
 	return Steering;
 }
-
 SteeringOutput Flee::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	SteeringOutput Steering{};
@@ -72,13 +76,18 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	SteeringOutput Steering{};
 
-	Agent.SetMaxLinearSpeed(500.0f);
+	Steering.IsValid = FVector2D::Distance(Target.Position, Agent.GetPosition()) < 300.0f;
 
-	Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * (FVector2D::Distance(Target.Position, Agent.GetPosition()) / Agent.GetMaxLinearSpeed());
+	if (Steering.IsValid)
+	{
+		Agent.SetMaxLinearSpeed(500.0f);
 
-	Steering.LinearVelocity = Agent.PredictedTargetLocation - Agent.GetPosition();
+		Agent.PredictedTargetLocation = Target.Position + Target.LinearVelocity * (FVector2D::Distance(Target.Position, Agent.GetPosition()) / Agent.GetMaxLinearSpeed());
 
-	Steering.LinearVelocity *= -1.0f;
+		Steering.LinearVelocity = Agent.PredictedTargetLocation - Agent.GetPosition();
+
+		Steering.LinearVelocity *= -1.0f;
+	}
 	
 	return Steering;
 }

@@ -5,6 +5,8 @@
 #include <format>
 #include <string>
 #include "imgui.h"
+#include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
+#include "Movement/SteeringBehaviors/Flocking/Flock.h"
 
 
 // Sets default values
@@ -245,6 +247,10 @@ void ALevel_SteeringBehaviors::SetAgentBehavior(ImGui_Agent& Agent)
 		break;
 	case BehaviorTypes::Evade:
 		Agent.Behavior = std::make_unique<Evade>();
+		break;
+	case BehaviorTypes::PrioritySteering:
+		std::vector SteeringBehaviors { std::vector<ISteeringBehavior*>({ new Evade(), new Wander() }) };
+		Agent.Behavior = std::make_unique<PrioritySteering>(SteeringBehaviors);
 		break;
 	//TODO; Implement behaviors setting here
 	default:

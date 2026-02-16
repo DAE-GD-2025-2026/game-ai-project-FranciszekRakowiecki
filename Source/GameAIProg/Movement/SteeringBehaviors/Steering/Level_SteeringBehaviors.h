@@ -39,6 +39,8 @@ private:
 		Evade,
 		Pursuit,
 		Face,
+		PrioritySteering,
+		Flocking,
 
 		// @ End
 		Count
