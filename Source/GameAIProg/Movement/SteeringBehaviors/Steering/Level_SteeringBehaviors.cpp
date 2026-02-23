@@ -249,12 +249,12 @@ void ALevel_SteeringBehaviors::SetAgentBehavior(ImGui_Agent& Agent)
 		Agent.Behavior = std::make_unique<Evade>();
 		break;
 	case BehaviorTypes::PrioritySteering:
-		std::vector SteeringBehaviors { std::vector<ISteeringBehavior*>({ new Evade(), new Wander() }) };
-		Agent.Behavior = std::make_unique<PrioritySteering>(SteeringBehaviors);
+		// std::vector SteeringBehaviors { std::vector<ISteeringBehavior*>({ new Evade(), new Wander() }) };
+		Agent.Behavior = std::make_unique<PrioritySteering>(std::vector<ISteeringBehavior*>({ new Evade(), new Wander() }));
 		break;
-	//TODO; Implement behaviors setting here
 	default:
-		assert(false); // Incorrect Agent Behavior gotten during SetAgentBehavior()	
+		assert(false); // Incorrect Agent Behavior gotten during SetAgentBehavior()
+		break;
 	}
 
 	UpdateTarget(Agent);

@@ -45,6 +45,10 @@ public:
 	void EmptyCells();
 	void RenderCells()const;
 
+	FVector2D GetAverageNeighborPos() const;
+
+	FVector2D GetAverageNeighborVelocity() const;
+
 private:
 	// For debug draw purposes
 	UWorld* pWorld{};

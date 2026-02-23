@@ -13,6 +13,8 @@
 #include "../SpacePartitioning/SpacePartitioning.h"
 #endif
 
+class CellSpace;
+
 class Flock final
 {
 public:
@@ -58,14 +60,11 @@ private:
 	int FlockSize{0};
 	TArray<ASteeringAgent*> Agents{};
 	TSubclassOf<ASteeringAgent> AgentClass;
-	
-#ifdef GAMEAI_USE_SPACE_PARTITIONING
-	//std::unique_ptr<CellSpace> pPartitionedSpace{};
-	//int NrOfCellsX{ 10 };
-	//TArray<FVector2D> OldPositions{};
-#else // No space partitioning
+	std::unique_ptr<CellSpace> pPartitionedSpace{};
+	int NrOfCellsX{ 10 };
+	TArray<FVector2D> OldPositions{};
+
 	TArray<ASteeringAgent*> Neighbors{};
-#endif // USE_SPACE_PARTITIONING
 	
 	float NeighborhoodRadius{200.f};
 	int NrOfNeighbors{0};
@@ -74,16 +73,15 @@ private:
 	ASteeringAgent* pAgentToEvade{nullptr};
 	
 	//Steering Behaviors
-	//std::unique_ptr<Separation> pSeparationBehavior{};
-	//std::unique_ptr<Cohesion> pCohesionBehavior{};
-	//std::unique_ptr<VelocityMatch> pVelMatchBehavior{};
-	//std::unique_ptr<Seek> pSeekBehavior{};
-	//std::unique_ptr<Wander> pWanderBehavior{};
-	//std::unique_ptr<Evade> pEvadeBehavior{};
-	
+	std::unique_ptr<Separation> pSeparationBehavior{};
+	std::unique_ptr<Cohesion> pCohesionBehavior{};
+	std::unique_ptr<Match> pVelMatchBehavior{};
+	std::unique_ptr<Seek> pSeekBehavior{};
+	std::unique_ptr<Wander> pWanderBehavior{};
+	std::unique_ptr<Evade> pEvadeBehavior{};
+
 	std::unique_ptr<BlendedSteering> pBlendedSteering{};
 	std::unique_ptr<PrioritySteering> pPrioritySteering{};
-
 	// UI and rendering
 	bool DebugRenderSteering{false};
 	bool DebugRenderNeighborhood{true};

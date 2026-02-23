@@ -32,9 +32,6 @@ SteeringOutput BlendedSteering::CalculateSteering(float DeltaT, ASteeringAgent& 
 	SteeringOutput BlendedSteering = {};
 	SteeringOutput Steering = {};
 	
-	// TODO: Calculate the weighted average steeringbehavior
-	
-	// TODO: Add debug drawing
 
 	for (WeightedBehavior& behavior : WeightedBehaviors)
 	{

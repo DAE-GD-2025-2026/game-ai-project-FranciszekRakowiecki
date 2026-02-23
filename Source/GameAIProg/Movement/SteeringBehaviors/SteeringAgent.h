@@ -64,6 +64,10 @@ protected:
 
 public:
 	FVector2D PredictedTargetLocation = { 0.0f, 0.0f };
+
+	FVector2D AvgNeighborLocation = { 0.0f, 0.0f };
+	FVector2D AvgNeighborVelocity = { 0.0f, 0.0f };
+	FVector2D OldLocation = { 0.0f, 0.0f };
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

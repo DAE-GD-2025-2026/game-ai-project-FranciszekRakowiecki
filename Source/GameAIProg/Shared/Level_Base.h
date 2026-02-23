@@ -28,6 +28,8 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	AWorldTrimVolume* GetTrimWorld() const { return TrimWorld; }
 	
 protected:
 	// Common UI Vars

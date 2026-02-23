@@ -9,10 +9,9 @@
 SteeringOutput Cohesion::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
 {
 	SteeringOutput Steering;
-	pFlock->RegisterNeighbors(&pAgent);
 
-	FVector2D avgPosition = pFlock->GetAverageNeighborPos();
-	FVector2D avgVelocity = pFlock->GetAverageNeighborVelocity();
+	FVector2D avgPosition = pAgent.AvgNeighborLocation;
+	FVector2D avgVelocity = pAgent.AvgNeighborVelocity;
 
 	if (!Flock::IsWithinRadius(pAgent.GetPosition(), avgPosition, 200.0f))
 		Steering.LinearVelocity = (avgPosition + avgVelocity) - pAgent.GetPosition();
@@ -22,13 +21,10 @@ SteeringOutput Cohesion::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
 
 SteeringOutput Separation::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
 {
-	pFlock->RegisterNeighbors(&pAgent);
-	
 	SteeringOutput Steering;
-	pFlock->RegisterNeighbors(&pAgent);
 
-	FVector2D avgPosition = pFlock->GetAverageNeighborPos();
-	FVector2D avgVelocity = pFlock->GetAverageNeighborVelocity();
+	FVector2D avgPosition = pAgent.AvgNeighborLocation;
+	FVector2D avgVelocity = pAgent.AvgNeighborVelocity;
 
 	if (Flock::IsWithinRadius(pAgent.GetPosition(), avgPosition, 200.0f))
 		Steering.LinearVelocity = pAgent.GetPosition() - (avgPosition + avgVelocity);
@@ -38,11 +34,9 @@ SteeringOutput Separation::CalculateSteering(float deltaT, ASteeringAgent& pAgen
 
 SteeringOutput Match::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
 {
-	pFlock->RegisterNeighbors(&pAgent);
-
 	SteeringOutput Steering{};
 	
-	Steering.LinearVelocity = pFlock->GetAverageNeighborVelocity();
+	Steering.LinearVelocity = pAgent.AvgNeighborVelocity;
 	
 	return Steering;
 }

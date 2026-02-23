@@ -2,7 +2,9 @@
 #include "FlockingSteeringBehaviors.h"
 #include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
 #include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
+#include "Movement/SteeringBehaviors/SpacePartitioning/SpacePartitioning.h"
 #include "Shared/ImGuiHelpers.h"
+#include "Shared/Level_Base.h"
 
 
 Flock::Flock(
@@ -18,14 +20,22 @@ Flock::Flock(
 {
 	Agents.SetNum(FlockSize);
 
- // TODO: initialize the flock and the memory pool
+	pEvadeBehavior = std::make_unique<Evade>();
+	pWanderBehavior = std::make_unique<Wander>();
+	pCohesionBehavior = std::make_unique<Cohesion>(this);
+	pSeparationBehavior = std::make_unique<Separation>(this);
+	pVelMatchBehavior = std::make_unique<Match>(this);
 
-	pPrioritySteering = std::make_unique<PrioritySteering>(std::vector<ISteeringBehavior*>({ new Evade(), new Wander() }));
+	pPrioritySteering = std::make_unique<PrioritySteering>(std::vector<ISteeringBehavior*>({ pEvadeBehavior.get(), pWanderBehavior.get() }));
 	pBlendedSteering = std::make_unique<BlendedSteering>(std::vector<BlendedSteering::WeightedBehavior>());
 	// {new Cohesion(this), 0.5f}, {new Separation(this), 0.5f}, {new Match(this), 0.5f}
-	pBlendedSteering->AddBehaviour({ new Cohesion(this), 0.5f });
-	pBlendedSteering->AddBehaviour({ new Separation(this), 0.5f });
-	pBlendedSteering->AddBehaviour({ new Match(this), 0.5f });
+	pBlendedSteering->AddBehaviour({ pCohesionBehavior.get(), 0.5f });
+	pBlendedSteering->AddBehaviour({ pSeparationBehavior.get(), 0.5f });
+	pBlendedSteering->AddBehaviour({ pVelMatchBehavior.get(), 0.5f });
+
+	ALevel_Base* level = dynamic_cast<ALevel_Base*>(pWorld->GetCurrentLevel());
+	if (level)
+		pPartitionedSpace = std::make_unique<CellSpace>(pWorld, level->GetTrimWorld()->GetTrimWorldSize(), level->GetTrimWorld()->GetTrimWorldSize(), NrOfCellsX, NrOfCellsX, 8);
 
 	Neighbors.SetNum(8);
 
@@ -40,8 +50,6 @@ Flock::Flock(
 
 Flock::~Flock()
 {
- // TODO: Cleanup any additional data
-
 	 for (int index = 0; index < this->Agents.Num(); ++index)
 	 {
 	 	this->pWorld->DestroyActor(Agents[index]);
@@ -50,16 +58,31 @@ Flock::~Flock()
 
 void Flock::Tick(float DeltaTime)
 {
- // TODO: update the flock
- // TODO: for every agent:
-  // TODO: register the neighbors for this agent (-> fill the memory pool with the neighbors for the currently evaluated agent)
-  // TODO: update the agent (-> the steeringbehaviors use the neighbors in the memory pool)
-  // TODO: trim the agent to the world
+	bool enableSpacialPartitioning = false;
 
-	// Registering neighbors can be done when calculating steering combining two loops into one
-	// just preventing recalculating the neighbors for the agent when another behavior already checked for those around it
+	if (enableSpacialPartitioning)
+	{
+		for (ASteeringAgent* SteeringAgent : Agents)
+		{
+			pPartitionedSpace.get()->UpdateAgentCell(*SteeringAgent, SteeringAgent->OldLocation);
+			pPartitionedSpace.get()->RegisterNeighbors(*SteeringAgent, 150.0f);
+			SteeringAgent->OldLocation = SteeringAgent->GetPosition();
 
-	// And resetting it every tick so that if the last and first agent in the loop check perhaps because of sorting, means that the agent will still have its neighbors updated correctly
+			SteeringAgent->AvgNeighborVelocity = pPartitionedSpace.get()->GetAverageNeighborVelocity();
+			SteeringAgent->AvgNeighborLocation = pPartitionedSpace.get()->GetAverageNeighborPos();
+		}
+	}
+	else
+	{
+		for (ASteeringAgent* SteeringAgent : Agents)
+		{
+			RegisterNeighbors(SteeringAgent);
+
+			SteeringAgent->AvgNeighborLocation = GetAverageNeighborPos();
+			SteeringAgent->AvgNeighborVelocity = GetAverageNeighborVelocity();
+		}
+	}
+	
 	pLastNeighborCalc = nullptr;
 }
 
@@ -121,7 +144,9 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 
 ASteeringAgent* Flock::MakeMeAnAgent() const
 {
-	return this->pWorld->SpawnActor<ASteeringAgent>(this->AgentClass, FVector{0,0,90}, FRotator::ZeroRotator);
+	FActorSpawnParameters params{};
+	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	return this->pWorld->SpawnActor<ASteeringAgent>(this->AgentClass, FVector{0,0,90}, FRotator::ZeroRotator, params)	;
 }
 
 void Flock::RenderNeighborhood()
@@ -134,14 +159,15 @@ void Flock::RegisterNeighbors(ASteeringAgent* const pAgent)
 {
 	if (pAgent == pLastNeighborCalc)
 		return;
- // TODO: Implement
 	NrOfNeighbors = 0;
 
-	for (ASteeringAgent* pAgentToEvade : Agents)
+	pLastNeighborCalc = pAgent;
+
+	for (ASteeringAgent* AgentToEvade : Agents)
 	{
 		if (NrOfNeighbors >= Neighbors.Num())
 			break;
-		if (pAgentToEvade != pAgent && IsWithinRadius(pAgentToEvade, pAgent))
+		if (AgentToEvade != pAgent && IsWithinRadius(AgentToEvade, pAgent))
 		{
 			Neighbors[NrOfNeighbors] = pAgent;
 			NrOfNeighbors++;
@@ -160,17 +186,13 @@ FVector2D Flock::GetAverageNeighborPos() const
 	{
 		avgPosition += Neighbors[index]->GetPosition() * factor;
 	}
-	
- // TODO: Implement
-	
+
 	return avgPosition;
 }
 
 FVector2D Flock::GetAverageNeighborVelocity() const
 {
 	FVector2D avgVelocity = FVector2D::ZeroVector;
-
- // TODO: Implement
 
 	const float factor = 1.0f / float(NrOfNeighbors);
 
