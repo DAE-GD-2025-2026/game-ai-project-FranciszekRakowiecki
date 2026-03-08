@@ -10,10 +10,12 @@ class BlendedSteering final: public ISteeringBehavior
 public:
 	struct WeightedBehavior
 	{
+		std::string name;
 		ISteeringBehavior* pBehavior = nullptr;
 		float Weight = 0.f;
 
-		WeightedBehavior(ISteeringBehavior* const pBehavior, float Weight) :
+		WeightedBehavior(std::string name, ISteeringBehavior* const pBehavior, float Weight) :
+			name(name),
 			pBehavior(pBehavior),
 			Weight(Weight)
 		{};

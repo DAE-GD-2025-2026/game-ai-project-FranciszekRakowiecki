@@ -1,9 +1,13 @@
 #include "SpacePartitioning.h"
+
+#include <iostream>
+#include <__msvc_ostream.hpp>
+
 #include "DrawDebugHelpers.h"
 
 // --- Cell ---
 // ------------
-Cell::Cell(float Left, float Bottom, float Width, float Height)
+Cell::Cell(int index, float Left, float Bottom, float Width, float Height) : index(index)
 {
 	BoundingBox.Min = { Left, Bottom };
 	BoundingBox.Max = { BoundingBox.Min.X + Width, BoundingBox.Min.Y + Height };
@@ -35,7 +39,7 @@ CellSpace::CellSpace(UWorld* pWorld, float Width, float Height, int Rows, int Co
 	, SpaceHeight{Height}
 	, NrOfRows{Rows}
 	, NrOfCols{Cols}
-	, NrOfNeighbors{0}
+	, NrOfNeighbors{0}, MaxNeighbors(MaxEntities)
 {
 	Neighbors.SetNum(MaxEntities);
 	
@@ -43,35 +47,68 @@ CellSpace::CellSpace(UWorld* pWorld, float Width, float Height, int Rows, int Co
 	CellWidth = Width / Cols;
 	CellHeight = Height / Rows;
 
-	const float Left = Width / 2.0f;
-	const float Top = Height / 2.0f;
-
-	for (int Index_Y = 0; Index_Y < Rows; ++Index_Y)
+	for (int row = 0, Index = 0; row < Rows; ++row)
 	{
-		for (int Index_X = 0; Index_X < Cols; ++Index_X)
+		for (int col = 0; col < Cols; ++col, Index++)
 		{
-			Cells.emplace_back(Cell(Left, Top, Width, Height));
+			Cells.emplace_back(Cell(Index, col * CellWidth - Width / 2.0f, row * CellHeight - Height / 2.0f, CellWidth, CellHeight));
 		}
 	}
 }
 
-void CellSpace::AddAgent(ASteeringAgent& Agent)
+void CellSpace::AddAgent(ASteeringAgent* Agent)
 {
-	// TODO Add the agent to the correct cell
+	UpdateAgentCell(Agent, {}, false);
 }
 
-void CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
+void CellSpace::UpdateAgentCell(ASteeringAgent* Agent, const FVector2D& OldPos, bool hasOldPosition)
 {
-	//TODO Check if the agent needs to be moved to another cell.
-	//TODO Use the calculated index for oldPos and currentPos for this
+	if (hasOldPosition)
+	{
+		const int index = PositionToIndex(OldPos);
+		const int new_index = PositionToIndex(Agent->GetPosition());
 
+		if (index != new_index)
+		{
+			auto it = std::ranges::find(Cells[index].Agents, Agent);
+			if (it != Cells[index].Agents.end())
+				Cells[index].Agents.erase(it);
+
+			UE_LOG(LogTemp, Warning, TEXT("From %d to %d"), index, new_index);
+		}
+		else
+			return;
+	}
+
+	const int new_index = PositionToIndex(Agent->GetPosition());
+
+	// UE_LOG(LogTemp, Warning, TEXT("The index is silly %d"), new_index);
 	
+	Cells[new_index].Agents.push_back(Agent);
 }
 
 void CellSpace::RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius)
 {
-	// TODO Register the neighbors for the provided agent
-	// TODO Only check the cells that are within the radius of the neighborhood
+	NrOfNeighbors = 0;
+	
+	const FVector2D position = Agent.GetPosition();
+	const FRect agent_rect ( {position.X - QueryRadius, position.Y - QueryRadius}, {QueryRadius + position.X, QueryRadius + position.Y} );
+	
+	for (Cell& cell : Cells)
+	{
+		if (NrOfNeighbors >= MaxNeighbors)
+			return;
+		if (!DoRectsOverlap(cell.BoundingBox, agent_rect))
+			continue;
+		for (ASteeringAgent* agent : cell.Agents)
+		{
+			if (NrOfNeighbors >= MaxNeighbors)
+				return;
+			
+			Neighbors[NrOfNeighbors] = agent;
+			NrOfNeighbors++;
+		}
+	}
 }
 
 void CellSpace::EmptyCells()
@@ -82,8 +119,6 @@ void CellSpace::EmptyCells()
 
 void CellSpace::RenderCells() const
 {
-	// TODO Render the cells with the number of agents inside of it
-
 	for (const Cell& cell : Cells)
 	{
 		const FVector2D extent = cell.BoundingBox.Max - cell.BoundingBox.Min;
@@ -96,37 +131,35 @@ FVector2D CellSpace::GetAverageNeighborPos() const
 {
 	FVector2D avgPosition = FVector2D::ZeroVector;
 
-	const float factor = 1.0f / float(NrOfNeighbors);
-
 	for (int index = 0; index < NrOfNeighbors; ++index)
 	{
-		avgPosition += Neighbors[index]->GetPosition() * factor;
+		avgPosition += Neighbors[index]->GetPosition();
 	}
 
-	return avgPosition;
+	return avgPosition / float(NrOfNeighbors);
 }
 
 FVector2D CellSpace::GetAverageNeighborVelocity() const
 {
 	FVector2D avgVelocity = FVector2D::ZeroVector;
 
-	const float factor = 1.0f / float(NrOfNeighbors);
-
 	for (int index = 0; index < NrOfNeighbors; ++index)
 	{
-		avgVelocity += Neighbors[index]->GetLinearVelocity() * factor;
+		avgVelocity += Neighbors[index]->GetLinearVelocity();
 	}
 
-	return avgVelocity;
+	return avgVelocity / float(NrOfNeighbors);
 }
 
 int CellSpace::PositionToIndex(FVector2D const & Pos) const
 {
+	int x = static_cast<int>((Pos.X + SpaceWidth / 2.0f) / CellWidth);
+	int y = static_cast<int>((Pos.Y + SpaceHeight / 2.0f) / CellHeight);
 
-	int x = (Pos.X / CellWidth) * this->NrOfCols;
-	int y = (Pos.Y / CellHeight) * this->NrOfRows;
+	x = FMath::Clamp(x, 0, this->NrOfRows - 1);
+	y = FMath::Clamp(y, 0, this->NrOfCols - 1);
 	
-	return x + y * this->NrOfRows;
+	return x + y * this->NrOfCols;
 }
 
 bool CellSpace::DoRectsOverlap(FRect const & RectA, FRect const & RectB)

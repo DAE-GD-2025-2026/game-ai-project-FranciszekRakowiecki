@@ -16,15 +16,17 @@
 
 // --- Cell ---
 // ------------
+
 struct Cell final
 {
-	Cell(float Left, float Bottom, float Width, float Height);
+	Cell(int index, float Left, float Bottom, float Width, float Height);
 
 	std::vector<FVector2D> GetRectPoints() const;
 	
 	// all the agents currently in this cell
-	std::list<ASteeringAgent*> Agents;
+	std::vector<ASteeringAgent*> Agents;
 	FRect BoundingBox;
+	const int index;
 };
 
 // --- Partitioned Space ---
@@ -34,8 +36,8 @@ class CellSpace final
 public:
 	CellSpace(UWorld* pWorld, float Width, float Height, int Rows, int Cols, int MaxEntities);
 
-	void AddAgent(ASteeringAgent& Agent);
-	void UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos);
+	void AddAgent(ASteeringAgent* Agent);
+	void UpdateAgentCell(ASteeringAgent* Agent, const FVector2D& OldPos, bool hasOldPosition = true);
 
 	void RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius);
 	const TArray<ASteeringAgent*>& GetNeighbors() const { return Neighbors; }
@@ -69,6 +71,7 @@ private:
 	// Members to avoid memory allocation on every frame
 	TArray<ASteeringAgent*> Neighbors;
 	int NrOfNeighbors;
+	const int MaxNeighbors;
 
 	// Helper functions
 	int PositionToIndex(FVector2D const & Pos) const;

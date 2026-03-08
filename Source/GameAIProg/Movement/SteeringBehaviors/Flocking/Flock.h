@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 // Toggle this define to enable/disable spatial partitioning
-// #define GAMEAI_USE_SPACE_PARTITIONING
+#define GAMEAI_USE_SPACE_PARTITIONING
 
 #include "FlockingSteeringBehaviors.h"
 #include "Movement/SteeringBehaviors/SteeringAgent.h"
@@ -9,6 +9,7 @@
 #include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
 #include <memory>
 #include "imgui.h"
+#include "Shared/WorldTrimVolume.h"
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
 #include "../SpacePartitioning/SpacePartitioning.h"
 #endif
@@ -24,9 +25,7 @@ public:
 	int FlockSize = 10, 
 	float WorldSize = 100.f, 
 	ASteeringAgent* const pAgentToEvade = nullptr, 
-	bool bTrimWorld = false);
-
-	~Flock();
+	bool bTrimWorld = false, AWorldTrimVolume* trimWorld);
 
 	void Tick(float DeltaTime);
 	void RenderDebug();
@@ -35,8 +34,8 @@ public:
 	ASteeringAgent* MakeMeAnAgent() const;
 
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
-	//const TArray<ASteeringAgent*>& GetNeighbors() const { return pPartitionedSpace->GetNeighbors(); }
-	//int GetNrOfNeighbors() const { return pPartitionedSpace->GetNrOfNeighbors(); }
+	const TArray<ASteeringAgent*>& GetNeighbors() const { return pPartitionedSpace->GetNeighbors(); }
+	int GetNrOfNeighbors() const { return pPartitionedSpace->GetNrOfNeighbors(); }
 #else // No space partitioning
 	void RegisterNeighbors(ASteeringAgent* const Agent);
 	int GetNrOfNeighbors() const { return NrOfNeighbors; }
@@ -60,13 +59,16 @@ private:
 	int FlockSize{0};
 	TArray<ASteeringAgent*> Agents{};
 	TSubclassOf<ASteeringAgent> AgentClass;
+#ifdef GAMEAI_USE_SPACE_PARTITIONING
 	std::unique_ptr<CellSpace> pPartitionedSpace{};
 	int NrOfCellsX{ 10 };
+#endif
 	TArray<FVector2D> OldPositions{};
 
 	TArray<ASteeringAgent*> Neighbors{};
 	
 	float NeighborhoodRadius{200.f};
+	int MaxNrOfNeighbors{8};
 	int NrOfNeighbors{0};
 	ASteeringAgent* pLastNeighborCalc{nullptr};
 
@@ -86,6 +88,8 @@ private:
 	bool DebugRenderSteering{false};
 	bool DebugRenderNeighborhood{true};
 	bool DebugRenderPartitions{true};
+
+	AWorldTrimVolume* trimWorld;
 
 	void RenderNeighborhood();
 };

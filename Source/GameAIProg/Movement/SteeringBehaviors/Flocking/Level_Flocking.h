@@ -25,7 +25,7 @@ protected:
 
 	int const FlockSize{100};
 
-	TUniquePtr<Flock> pFlock{};
+	std::unique_ptr<Flock> pFlock{};
 	
 	UPROPERTY(EditAnywhere, Category = "Flocking")
 	ASteeringAgent* pAgentToEvade{nullptr}; // non owning ref

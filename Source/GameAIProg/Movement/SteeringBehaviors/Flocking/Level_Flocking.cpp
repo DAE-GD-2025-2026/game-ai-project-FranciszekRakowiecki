@@ -16,18 +16,15 @@ void ALevel_Flocking::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TrimWorld->SetTrimWorldSize(3000.f);
+	TrimWorld->SetTrimWorldSize(1000.f);
 	TrimWorld->bShouldTrimWorld = true;
 
-	pFlock = TUniquePtr<Flock>(
-		new Flock(
-			GetWorld(),
+	pFlock = std::make_unique<Flock>(GetWorld(),
 			SteeringAgentClass,
 			FlockSize,
 			TrimWorld->GetTrimWorldSize(),
 			pAgentToEvade,
-			true)
-			);
+			true, TrimWorld);
 }
 
 // Called every frame
