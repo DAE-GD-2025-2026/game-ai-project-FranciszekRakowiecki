@@ -45,7 +45,9 @@ namespace GameAI
 		virtual std::unique_ptr<Node> const CloneNode(const Node& Other) const override
 		{
 			TerrainNode const * AsTerrainNode = dynamic_cast<TerrainNode const *>(&Other);
-			return std::unique_ptr<Node>(new TerrainNode(*AsTerrainNode));
+			if (AsTerrainNode)
+				return std::unique_ptr<Node>(new TerrainNode(*AsTerrainNode));
+			return nullptr;
 		}
 	};
 	

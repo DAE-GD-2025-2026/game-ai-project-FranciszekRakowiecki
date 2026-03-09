@@ -9,11 +9,11 @@
 
 Flock::Flock(
 	UWorld* pWorld,
-	TSubclassOf<ASteeringAgent> AgentClass,
+	TSubclassOf<ASteeringAgent> AgentClass, AWorldTrimVolume* trimWorld,
 	int FlockSize,
 	float WorldSize,
 	ASteeringAgent* const pAgentToEvade,
-	bool bTrimWorld, AWorldTrimVolume* trimWorld)
+	bool bTrimWorld)
 	: pWorld{pWorld}
 	, FlockSize{ FlockSize }
 	, AgentClass{AgentClass},pAgentToEvade{pAgentToEvade}, trimWorld(trimWorld)

@@ -20,11 +20,11 @@ void ALevel_Flocking::BeginPlay()
 	TrimWorld->bShouldTrimWorld = true;
 
 	pFlock = std::make_unique<Flock>(GetWorld(),
-			SteeringAgentClass,
+			SteeringAgentClass, TrimWorld,
 			FlockSize,
 			TrimWorld->GetTrimWorldSize(),
 			pAgentToEvade,
-			true, TrimWorld);
+			true);
 }
 
 // Called every frame

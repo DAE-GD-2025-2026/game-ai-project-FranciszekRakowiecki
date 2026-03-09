@@ -63,8 +63,10 @@ public:
 class Arrive : public ISteeringBehavior
 {
 public:
+	float TargetRadius = 50.0f;
 	Arrive() = default;
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
+	void SetTargetRadius(float radius);
 };
 
 class Face : public ISteeringBehavior

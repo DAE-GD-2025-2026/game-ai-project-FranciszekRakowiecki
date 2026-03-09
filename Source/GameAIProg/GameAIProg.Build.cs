@@ -8,7 +8,7 @@ public class GameAIProg : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		
+		bUseRTTI = true;
 		
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",

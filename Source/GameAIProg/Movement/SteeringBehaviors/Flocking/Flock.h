@@ -21,11 +21,11 @@ class Flock final
 public:
 	Flock(
 	UWorld* pWorld,
-	TSubclassOf<ASteeringAgent> AgentClass,
+	TSubclassOf<ASteeringAgent> AgentClass, AWorldTrimVolume* trimWorld,
 	int FlockSize = 10, 
 	float WorldSize = 100.f, 
 	ASteeringAgent* const pAgentToEvade = nullptr, 
-	bool bTrimWorld = false, AWorldTrimVolume* trimWorld);
+	bool bTrimWorld = false);
 
 	void Tick(float DeltaTime);
 	void RenderDebug();

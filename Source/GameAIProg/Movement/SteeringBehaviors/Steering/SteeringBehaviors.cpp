@@ -43,7 +43,6 @@ SteeringOutput Flee::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 SteeringOutput Arrive::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	const float SlowRadius = 100.0f;
-	const float TargetRadius = 300.0f;
 
 	const float Speed = 500.0f;
 
@@ -58,6 +57,11 @@ SteeringOutput Arrive::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 	Steering.LinearVelocity = Target.Position - Agent.GetPosition();
 	
 	return Steering;
+}
+
+void Arrive::SetTargetRadius(float radius)
+{
+	TargetRadius = radius;
 }
 
 SteeringOutput Face::CalculateSteering(float DeltaT, ASteeringAgent& Agent)

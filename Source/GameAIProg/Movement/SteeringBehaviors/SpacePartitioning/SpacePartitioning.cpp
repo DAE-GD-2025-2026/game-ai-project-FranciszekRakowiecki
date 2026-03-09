@@ -1,7 +1,6 @@
 #include "SpacePartitioning.h"
 
 #include <iostream>
-#include <__msvc_ostream.hpp>
 
 #include "DrawDebugHelpers.h"
 
