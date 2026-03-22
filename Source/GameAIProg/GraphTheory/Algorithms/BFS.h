@@ -15,5 +15,8 @@ namespace GameAI
 
 	private:
 		Graph* pGraph;
+		struct BFS_Jump;
+
+		std::vector<Node*> BackTrack(std::vector<BFS_Jump>& PastNodes, Node* start, Node* end) const;
 	};
 }

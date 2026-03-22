@@ -21,7 +21,7 @@ void ALevel_GraphTheory::BeginPlay()
 	Super::BeginPlay();
 	
 	// Add the graph editor to our player
-	if (PlayerController = Cast<APlayerController>(GetWorld()->GetFirstLocalPlayerFromController()->PlayerController); 
+	if (PlayerController = Cast<APlayerController>(GetWorld()->GetFirstLocalPlayerFromController()->PlayerController);
 		GraphEditorClass && PlayerController)
 	{
 		PlayerGraphEditor = NewObject<UGraphEditorComponent>(PlayerController->GetPawn(), GraphEditorClass);
