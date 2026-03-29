@@ -28,6 +28,7 @@ std::vector<Node*> BFS::FindPath(Node* const pStartNode, Node* const pDestinatio
 	std::vector<BFS_Jump> ClosedList;
 
 	OpenList.push(pStartNode);
+	ClosedList.emplace_back(BFS_Jump{ pStartNode, nullptr });
 
 	while (!OpenList.empty())
 	{
@@ -41,9 +42,9 @@ std::vector<Node*> BFS::FindPath(Node* const pStartNode, Node* const pDestinatio
 		for (Connection* conn : connections)
 		{
 			Node* child = pGraph->GetNode(conn->GetToId()).get();
-			static auto isNodeAlreadyChecked = [child](BFS_Jump& j)
+			auto isNodeAlreadyChecked = [child](const BFS_Jump& j)
 			{
-				return !(j.Previous == child || j.Self == child);
+				return j.Self == child;
 			};
 			if (std::ranges::find_if(ClosedList.begin(), ClosedList.end(), isNodeAlreadyChecked) != ClosedList.end())
 			{
@@ -66,7 +67,7 @@ std::vector<Node*> BFS::BackTrack(std::vector<BFS_Jump>& PastNodes, Node* start,
 
 	while (pCurrentNode != end)
 	{
-		auto it = std::ranges::find_if(PastNodes.begin(), PastNodes.end(), [pCurrentNode](BFS_Jump& j) { return j.Self == pCurrentNode; });
+		auto it = std::ranges::find_if(PastNodes.begin(), PastNodes.end(), [pCurrentNode](const BFS_Jump& j) { return j.Self == pCurrentNode; });
 		if (it == PastNodes.end())
 		{
 			UE_LOG(LogTemp, Error, TEXT("There is no path to the begin node."));

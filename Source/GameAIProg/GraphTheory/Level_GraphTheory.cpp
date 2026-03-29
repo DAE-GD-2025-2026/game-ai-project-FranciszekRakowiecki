@@ -98,7 +98,11 @@ void ALevel_GraphTheory::Tick(float DeltaTime)
 #pragma endregion UI
 	
 	Renderer.RenderGraph(Graph);
-	
+
+	if (Graph.WasChanged())
+	{
+		
+	}
 	// TODO Check if the graph has updated
 	// TODO if so, run the EulerianPath algorithm
 	// TODO if a path is found, have the agent follow it
@@ -107,8 +111,12 @@ void ALevel_GraphTheory::Tick(float DeltaTime)
 void ALevel_GraphTheory::UpdateAgentPath(std::vector<Node*> const& Trail)
 {
 	std::vector<FVector2D> path{};
-	
-	// TODO convert Node vector to positions vector
+	path.resize(Trail.size());
+
+	for (int index = 0; index < Trail.size(); ++index)
+	{
+		path[index] = Trail[index]->GetPosition();
+	}
 
 	PathFollow.SetPath(path);
 	if (path.size() > 0)

@@ -114,6 +114,8 @@ namespace GameAI
         {
             Connections.push_back(std::make_unique<Connection>(*OtherConnection.get()));
         }
+
+        m_WasGraphChanged = true;
     }
 
     // --- Nodes ------------------------------------------------------------
@@ -182,6 +184,7 @@ namespace GameAI
 
         NewNode->SetId(static_cast<int>(Nodes.size()));
         Nodes.push_back(std::move(NewNode));
+        m_WasGraphChanged = true;
         return Nodes.back()->GetId();
     }
 
@@ -204,6 +207,7 @@ namespace GameAI
 
         // Mark node as invalid (keep it in the vector to preserve indices)
         Nodes[NodeToRemoveId]->SetId(Graphs::InvalidNodeId);
+        m_WasGraphChanged = true;
         return true;
     }
 
@@ -287,11 +291,15 @@ namespace GameAI
             // Also add the inverse connection
             Connections.push_back(std::make_unique<Connection>(InverseNew));
         }
+
+        m_WasGraphChanged = true;
     }
 
     void Graph::AddConnection(int FromNodeId, int ToNodeId)
     {
         AddConnection(std::make_unique<Connection>(FromNodeId, ToNodeId));
+
+        m_WasGraphChanged = true;
     }
 
     bool Graph::RemoveConnection(Connection const* ConnectionToRemove)
@@ -309,7 +317,12 @@ namespace GameAI
                 [&](std::unique_ptr<Connection> const & Element){return *Element.get() == InverseConnection;});
         }
 			
-        return AmountRemoved > 0;
+        bool state = AmountRemoved > 0;
+
+        if (state)
+            m_WasGraphChanged = true;
+        
+        return state;
     }
 
     bool Graph::RemoveConnection(int FromNodeId, int ToNodeId)
@@ -326,14 +339,24 @@ namespace GameAI
 
     bool Graph::RemoveConnectionsFrom(int FromId)
     {
-        return 0 < std::erase_if(Connections,
+        bool state =  0 < std::erase_if(Connections,
             [=](auto const & Connection){return Connection->GetFromId() == FromId;});
+
+        if (state)
+            m_WasGraphChanged = true;
+        
+        return state;
     }
 
     bool Graph::RemoveConnectionsTo(int ToId)
     {
-        return 0 < std::erase_if(Connections,
+        bool state = 0 < std::erase_if(Connections,
     [=](auto const & Connection){return Connection->GetToId() == ToId;});
+
+        if (state)
+            m_WasGraphChanged = true;
+        
+        return state;
     }
 
     bool Graph::GetIsDirectional() const
@@ -353,6 +376,7 @@ namespace GameAI
             FVector2D BetweenNodes{GetNode(Connection->GetFromId())->GetPosition() - GetNode(Connection->GetToId())->GetPosition()};
             Connection->SetWeight(BetweenNodes.Length());
         }
+        m_WasGraphChanged = true;
     }
 
     std::optional<int> Graph::GetFirstInvalidNodeIdx() const

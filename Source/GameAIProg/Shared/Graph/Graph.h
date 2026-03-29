@@ -134,8 +134,12 @@ namespace GameAI
         // Helper
         void SetConnectionCostsToDistances();
 
+        bool WasChanged() const { return m_WasGraphChanged; }
+
     protected:
         std::optional<int> GetFirstInvalidNodeIdx() const;
+
+        bool m_WasGraphChanged{0};
         
         bool const bIsDirectional;
         std::vector<std::unique_ptr<Node>> Nodes;

@@ -8,6 +8,7 @@ public class GameAIProg : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		// Enable standard C++ dynamic casts & runtime typeinfo
 		bUseRTTI = true;
 		
 		PublicDependencyModuleNames.AddRange(new string[] {
@@ -24,6 +25,7 @@ public class GameAIProg : ModuleRules
 			"UMG",
 			"Slate",
 			"ImGui",
+			"Navmesh",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
