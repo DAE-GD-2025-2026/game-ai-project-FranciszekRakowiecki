@@ -19,5 +19,7 @@ namespace GameAI
 		std::unique_ptr<TriPolygon> pNavPoly;
 
 		void CreateNavigationGraph();
+
+		void AddConnectionWithWeight(int NodeId1, int NodeId2);
 	};
 }

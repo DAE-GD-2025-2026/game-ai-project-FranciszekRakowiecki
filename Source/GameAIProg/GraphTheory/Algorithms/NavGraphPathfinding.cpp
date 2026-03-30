@@ -14,17 +14,66 @@ std::vector<FVector2D> NavMeshPathfinding::FindPath(const FVector2D& startPos, c
 	//Create the path to return
 	std::vector<FVector2D> finalPath{};
 
-	//Get the start and endTriangle
+	FVector2D outTrigStart{};
+	TriPolygon::Triangle const* trigStart = pNavGraph->GetNavPolygon()->GetClosestTriangleToPosition(startPos, outTrigStart);
+
+	FVector2D outTrigEnd{};
+	TriPolygon::Triangle const* trigEnd = pNavGraph->GetNavPolygon()->GetClosestTriangleToPosition(startPos, outTrigEnd);
+
+	if (trigStart == trigEnd)
+		return std::vector<FVector2D>();
 
 	//We have valid start/end triangles and they are not the same
 	//=> Start looking for a path
 	//Copy the graph
 
-	//Create Extra node for the Start Node (Agent's position
+	int startNodeIdx = Graphs::InvalidNodeId, endNodeIdx = Graphs::InvalidNodeId;
 
-	//Create extra node for the endNode
+	std::unique_ptr<NavGraph> graph = pNavGraph->Clone();
+
+	for (TriPolygon::Edge& edge : trigStart->GetEdges())
+	{
+		std::optional<int> hasEdge = pNavGraph->GetNavPolygon()->FindEdgeIndex(edge);
+		if (hasEdge.has_value())
+		{
+			int edgeNodeIdx = pNavGraph->GetNodeIdFromEdgeIndex(hasEdge.value());
+
+			std::unique_ptr<NavGraphNode> node = std::make_unique<NavGraphNode>(startPos, Graphs::InvalidNodeId);
+			int nodeIdx = startNodeIdx = graph->AddNode(std::move(node));
+
+			graph->AddConnection(nodeIdx, edgeNodeIdx);
+			break;
+		}
+	}
+
+	for (TriPolygon::Edge& edge : trigEnd->GetEdges())
+	{
+		std::optional<int> hasEdge = pNavGraph->GetNavPolygon()->FindEdgeIndex(edge);
+		if (hasEdge.has_value())
+		{
+			int edgeNodeIdx = pNavGraph->GetNodeIdFromEdgeIndex(hasEdge.value());
+
+			std::unique_ptr<NavGraphNode> node = std::make_unique<NavGraphNode>(endPos, Graphs::InvalidNodeId);
+			int nodeIdx = endNodeIdx = graph->AddNode(std::move(node));
+
+			graph->AddConnection(edgeNodeIdx, nodeIdx);
+			break;
+		}
+	}
+
+	if (startNodeIdx == Graphs::InvalidNodeId || endNodeIdx == Graphs::InvalidNodeId)
+		return std::vector<FVector2D>();
 
 	//Run A star on new graph
+
+	AStar aStar(graph.get(), HeuristicFunctions::SqEuclidean);
+
+	std::vector<Node*> path = aStar.FindPath(graph->GetNode(startNodeIdx).get(), graph->GetNode(endNodeIdx).get());
+
+	for (Node* node : path)
+	{
+		finalPath.emplace_back(node->GetPosition());
+	}
 
 	//Debug Visualisation
 
