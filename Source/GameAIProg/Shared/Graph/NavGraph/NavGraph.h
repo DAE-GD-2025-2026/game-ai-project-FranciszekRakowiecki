@@ -21,5 +21,7 @@ namespace GameAI
 		void CreateNavigationGraph();
 
 		void AddConnectionWithWeight(int NodeId1, int NodeId2);
+
+		std::vector<TriPolygon::Edge> SharedEdges(std::array<TriPolygon::Edge, 3> const & Edges, std::array<TriPolygon::Edge, 3> const & otherEdges) const;
 	};
 }

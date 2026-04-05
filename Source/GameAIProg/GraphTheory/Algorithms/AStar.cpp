@@ -44,8 +44,8 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 				conn = conn.GetInverseCopy();
 			
 			Node* connectedNode{ pGraph->GetNode(conn.GetToId()).get()};
-			auto it = std::find(closedList.begin(), closedList.end(), [connectedNode](const NodeRecord& other) { return other.pNode == connectedNode; });
-			if (it == closedList.end())
+			auto closedelem = std::find_if(closedList.begin(), closedList.end(), [connectedNode](const NodeRecord& other) { return other.pNode == connectedNode; });
+			if (closedelem == closedList.end())
 			{
 				openList.emplace_back(NodeRecord{ connectedNode, connection, currentNodeRecord.estimatedTotalCost, currentNodeRecord.estimatedTotalCost + GetHeuristicCost(connectedNode, pGoalNode) });
 
@@ -72,7 +72,7 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 			
 			Node* next = pGraph->GetNode(idx).get();
 
-			record = *std::find(closedList.begin(), closedList.end(), [next](const NodeRecord& other) { return other.pNode == next; });
+			record = *std::find_if(closedList.begin(), closedList.end(), [next](const NodeRecord& other) { return other.pNode == next; });
 		}
 
 		std::reverse(path.begin(), path.end());

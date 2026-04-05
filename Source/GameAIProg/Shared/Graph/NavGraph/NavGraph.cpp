@@ -77,10 +77,8 @@ void GameAI::NavGraph::CreateNavigationGraph()
 
 			std::array<TriPolygon::Edge, 3> neighborEdges = neighbor.GetEdges();
 
-			std::vector<TriPolygon::Edge> sharedEdges {};
+			std::vector<TriPolygon::Edge> sharedEdges {SharedEdges(edges, neighborEdges)};
 			
-			std::set_intersection(edges.begin(), edges.end(), neighborEdges.begin(), neighborEdges.end(), std::back_inserter(sharedEdges));
-
 			if (sharedEdges.size() > 0)
 			{
 				TriPolygon::Edge sharedEdge {sharedEdges[0]};
@@ -127,4 +125,16 @@ void GameAI::NavGraph::AddConnectionWithWeight(int NodeId1, int NodeId2)
 	connection->SetWeight(HeuristicFunctions::Euclidean(difference.X, difference.Y));
 
 	AddConnection(std::move(connection));
+}
+
+std::vector<TriPolygon::Edge> GameAI::NavGraph::SharedEdges(std::array<TriPolygon::Edge, 3> const & Edges, std::array<TriPolygon::Edge, 3> const & otherEdges) const
+{
+	std::vector<TriPolygon::Edge> sharedEdges{};
+	for (const TriPolygon::Edge & Edge : Edges)
+		for (const TriPolygon::Edge & otherEdge : otherEdges)
+			if (Edge == otherEdge)
+			{
+				sharedEdges.push_back(Edge);
+			}
+	return sharedEdges;
 }
